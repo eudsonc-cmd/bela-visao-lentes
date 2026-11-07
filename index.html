@@ -550,6 +550,11 @@
 })();
 </script>
 
-<script>if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));</script>
+<script>if ('serviceWorker' in navigator) {
+  // Quando uma versão nova assume, recarrega uma vez para mostrá-la.
+  let reloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (!reloaded) { reloaded = true; location.reload(); } });
+  addEventListener('load', () => navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(r => r.update()).catch(() => {}));
+}</script>
 </body>
 </html>
