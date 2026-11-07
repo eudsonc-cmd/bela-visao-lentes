@@ -125,6 +125,10 @@
   .field { display: flex; flex-direction: column; gap: .25rem; min-width: 0; }
   .field label { font-size: 12.5px; color: var(--muted); }
   .field input, .field select { border: 1.5px solid var(--line); border-radius: 10px; padding: .65rem .7rem; background: var(--ivory); font-size: 17px; width: 100%; box-sizing: border-box; font-variant-numeric: tabular-nums; }
+  .signed { display: flex; gap: .4rem; }
+  .signed input { flex: 1; min-width: 0; }
+  .pm { flex: none; width: 3rem; border: 1.5px solid var(--line); border-radius: 10px; background: var(--paper); font-size: 20px; font-weight: 600; cursor: pointer; }
+  .pm:active { background: var(--mist); }
   .field input:focus, .field select:focus { outline: none; border-color: var(--navy); }
   .out { margin-top: .9rem; background: var(--navy); color: var(--ivory); border-radius: 16px; padding: 1rem 1.1rem; }
   .out .big { font-family: var(--serif); font-size: 30px; font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums; }
@@ -464,14 +468,18 @@
       ${wiz.length > 1 ? '<button class="restart" data-act="wback">← Pergunta anterior</button>' : ''}`;
   }
   function calcList() {
-    return `<p class="eyebrow">Ferramentas</p><h1>Calcular</h1><p class="lead">Aceita vírgula ou ponto. Cilindro em notação negativa (se digitar positivo, eu transponho).</p>
+    return `<p class="eyebrow">Ferramentas</p><h1>Calcular</h1><p class="lead">Aceita vírgula ou ponto. Toque em ± para deixar o número negativo. Cilindro em notação negativa (se digitar positivo, eu transponho).</p>
       <div class="calc-list">${Object.entries(CALCS).map(([k, c]) => `<a class="calc-item" href="#${k}"><span><b>${c.t}</b><small>${c.d}</small></span><span class="chev">›</span></a>`).join('')}</div>`;
   }
+  // Campos que podem ser negativos: o teclado numérico do iPhone não tem o sinal de menos
+  const SIGNED = new Set(['s', 'c', 'l', 'o', 'f']);
   function calc(k) {
     const c = CALCS[k];
     const fieldHTML = c.fields.map(([id, label, def, opts]) => opts
       ? `<div class="field full"><label for="f-${id}">${label}</label><select id="f-${id}" data-f="${id}">${opts.map(o => `<option value="${o[0]}">${o[1]}</option>`).join('')}</select></div>`
-      : `<div class="field"><label for="f-${id}">${label}</label><input id="f-${id}" data-f="${id}" inputmode="decimal" autocomplete="off" ${def ? `value="${def}"` : ''}></div>`).join('');
+      : SIGNED.has(id)
+        ? `<div class="field"><label for="f-${id}">${label}</label><div class="signed"><button type="button" class="pm" data-pm="${id}" aria-label="Trocar o sinal de ${label}">±</button><input id="f-${id}" data-f="${id}" inputmode="decimal" autocomplete="off" ${def ? `value="${def}"` : ''}></div></div>`
+        : `<div class="field"><label for="f-${id}">${label}</label><input id="f-${id}" data-f="${id}" inputmode="decimal" autocomplete="off" ${def ? `value="${def}"` : ''}></div>`).join('');
     return `<p class="eyebrow">Calcular</p><h1>${c.t}</h1><p class="lead">${c.d}</p><div class="form">${fieldHTML}</div><div class="out empty" id="out">Preencha os campos para ver o resultado.</div>`;
   }
   function problems() {
@@ -509,6 +517,12 @@
     };
     main.querySelectorAll('[data-f]').forEach(el => el.addEventListener('input', update));
     main.querySelectorAll('select[data-f]').forEach(el => el.addEventListener('change', update));
+    main.querySelectorAll('[data-pm]').forEach(b => b.addEventListener('click', () => {
+      const inp = document.getElementById('f-' + b.dataset.pm);
+      const v = inp.value.trim();
+      inp.value = v.startsWith('-') || v.startsWith('−') ? v.slice(1) : v.startsWith('+') ? '-' + v.slice(1) : '-' + v;
+      update(); inp.focus();
+    }));
   }
   function bindSearch() {
     const s = document.getElementById('psearch');

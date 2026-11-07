@@ -1,6 +1,6 @@
 // Guarda o aplicativo no celular para funcionar sem internet.
 // Ao publicar uma versão nova, troque o número abaixo.
-const VERSION = 'bv-lentes-v1';
+const VERSION = 'bv-lentes-v2';
 const FILES = ['./', './index.html', './manifest.webmanifest', './apple-touch-icon.png', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
